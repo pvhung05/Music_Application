@@ -6,6 +6,7 @@ import 'package:music/ui/setting/settings.dart';
 import 'package:music/ui/user/users.dart';
 
 import '../../data/model/song.dart';
+import '../now_playing/playing.dart';
 
 class MusicApp extends StatelessWidget {
   const MusicApp({super.key});
@@ -15,10 +16,11 @@ class MusicApp extends StatelessWidget {
     return MaterialApp(
       title: 'Music App',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.grey),
         useMaterial3: true,
       ),
       home: MusicHomePage(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -44,19 +46,35 @@ class _State extends State<MusicHomePage> {
       navigationBar: const CupertinoNavigationBar(middle: Text('Music App')),
       child: CupertinoTabScaffold(
         tabBar: CupertinoTabBar(
-          backgroundColor: Theme
-              .of(context)
-              .colorScheme
-              .onInverseSurface,
+          backgroundColor: Theme.of(context).colorScheme.onInverseSurface,
+          activeColor: Colors.black,
           items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
             BottomNavigationBarItem(
-              icon: Icon(Icons.album),
+              icon: Padding(
+                padding: EdgeInsets.only(top: 6), // Dịch xuống 4 pixel
+                child: Icon(Icons.home),
+              ),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Padding(
+                padding: EdgeInsets.only(top: 6),
+                child: Icon(Icons.album),
+              ),
               label: 'Discovery',
             ),
-            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Account'),
             BottomNavigationBarItem(
-              icon: Icon(Icons.settings),
+              icon: Padding(
+                padding: EdgeInsets.only(top: 6),
+                child: Icon(Icons.person),
+              ),
+              label: 'Account',
+            ),
+            BottomNavigationBarItem(
+              icon: Padding(
+                padding: EdgeInsets.only(top: 6),
+                child: Icon(Icons.settings),
+              ),
               label: 'Settings',
             ),
           ],
@@ -99,9 +117,12 @@ class _HomeTabPageState extends State<HomeTabPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: getBody(),
-    );
+    return Scaffold(body: getBody());
+  }
+
+  @override
+  void dispose() {
+    _viewModel.songStream.close();
   }
 
   Widget getBody() {
@@ -114,31 +135,29 @@ class _HomeTabPageState extends State<HomeTabPage> {
   }
 
   Widget getProgressBar() {
-    return const Center(
-      child: CircularProgressIndicator(),
-    );
+    return const Center(child: CircularProgressIndicator());
   }
 
   ListView getListView() {
     return ListView.separated(
-        itemBuilder: (context, position) {
-          return const Divider(
-            color: Colors.grey,
-            thickness: 1,
-              indent: 24,
-              endIndent: 24,
-          );
-        },
-        separatorBuilder: (context, position) {
-          return getRow(position);
-        },
-        itemCount: songs.length,
+      itemBuilder: (context, position) {
+        return const Divider(
+          color: Colors.grey,
+          thickness: 1,
+          indent: 24,
+          endIndent: 24,
+        );
+      },
+      separatorBuilder: (context, position) {
+        return getRow(position);
+      },
+      itemCount: songs.length,
       shrinkWrap: true,
     );
   }
 
   Widget getRow(int index) {
-    return Text(songs[index].title);
+    return _SongItemSection(parent: this, song: songs[index]);
   }
 
   void observeData() {
@@ -147,5 +166,81 @@ class _HomeTabPageState extends State<HomeTabPage> {
         songs.addAll(songList);
       });
     });
+  }
+
+  void showBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular((16))),
+          child: Container(
+            height: 600,
+            color: Colors.white,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  const Text('Model Bottom Sheet'),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Close Bottom Sheet'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void navigate(Song song) {
+    Navigator.push(
+      context,
+      CupertinoPageRoute(
+        builder: (context) {
+          return NowPlaying(songs: songs, playingSong: song);
+        },
+      ),
+    );
+  }
+}
+
+class _SongItemSection extends StatelessWidget {
+  const _SongItemSection({required this.parent, required this.song});
+
+  final _HomeTabPageState parent;
+  final Song song;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding: const EdgeInsets.only(left: 24, right: 8),
+      leading: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: FadeInImage.assetNetwork(
+          placeholder: 'assets/img.png',
+          image: song.image,
+          width: 48,
+          height: 48,
+          imageErrorBuilder: (context, error, stackTrace) {
+            return Image.asset('assets/img.png', width: 48, height: 48);
+          },
+        ),
+      ),
+      title: Text(song.title),
+      subtitle: Text(song.artist),
+      trailing: IconButton(
+        onPressed: () {
+          parent.showBottomSheet();
+        },
+        icon: const Icon(Icons.more_horiz),
+      ),
+      onTap: () {
+        parent.navigate(song);
+      },
+    );
   }
 }

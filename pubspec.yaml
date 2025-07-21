@@ -60,5 +60,5 @@ flutter:
 
   assets:
     - assets/songs.json
-
+    - assets/img.png
 
