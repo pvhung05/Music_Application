@@ -196,16 +196,39 @@ class _HomeTabPageState extends State<HomeTabPage> {
     );
   }
 
+  // void navigate(Song song) {
+  //   Navigator.push(
+  //     context,
+  //     CupertinoPageRoute(
+  //       builder: (context) {
+  //         return NowPlaying(songs: songs, playingSong: song);
+  //       },
+  //     ),
+  //   );
+  // }
   void navigate(Song song) {
-    Navigator.push(
-      context,
-      CupertinoPageRoute(
-        builder: (context) {
-          return NowPlaying(songs: songs, playingSong: song);
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            NowPlaying(songs: songs, playingSong: song),
+        transitionDuration: const Duration(milliseconds: 400),
+        reverseTransitionDuration: const Duration(milliseconds: 400),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final curvedAnimation =
+          CurvedAnimation(parent: animation, curve: Curves.easeOut);
+
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 1), // từ dưới lên
+              end: Offset.zero,
+            ).animate(curvedAnimation),
+            child: child,
+          );
         },
       ),
     );
   }
+
 }
 
 class _SongItemSection extends StatelessWidget {
