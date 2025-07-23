@@ -7,6 +7,8 @@ import 'package:music/ui/now_playing/audio_player_manager.dart';
 
 import 'audio_player_manager.dart' show DurationState;
 
+import 'dart:ui';
+
 class NowPlaying extends StatelessWidget {
   const NowPlaying({super.key, required this.playingSong, required this.songs});
 
@@ -52,111 +54,161 @@ class _NowPlayingPageState extends State<NowPlayingPage>
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    const delta = 32;
-    final radius = (screenWidth - delta) / 2;
-    //return Scaffold(body: Center(child: Text('Now Playing')));
-    return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        leading: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: const Icon(CupertinoIcons.chevron_down), // mũi tên xuống (v)
-        ),
-        middle: const Text('Now Playing'),
-        trailing: IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.more_horiz),
-        ),
-      ),
-      child: Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(widget.playingSong.album),
-              const SizedBox(height: 16),
-              const Text('_ ___ _'),
-              const SizedBox(height: 48),
-              RotationTransition(
-                turns: Tween(
-                  begin: 0.0,
-                  end: 1.0,
-                ).animate(_imageAnimController),
-                child: FadeInImage.assetNetwork(
-                  placeholder: 'assets/img.png',
-                  image: widget.playingSong.image,
-                  width: screenWidth - delta,
-                  height: screenWidth - delta,
-                  imageErrorBuilder: (context, error, stackTrace) {
-                    return Image.asset(
-                      'assets/img.png',
-                      width: screenWidth - delta,
-                      height: screenWidth - delta,
-                    );
-                  },
-                ),
-              ),
+    const delta = 0;
 
-              Padding(
-                padding: const EdgeInsets.only(top: 64, bottom: 16),
-                child: SizedBox(
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // ẢNH MỜ NỀN TOÀN MÀN
+          Positioned.fill(
+            child: ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
+              child: FadeInImage.assetNetwork(
+                placeholder: 'assets/img.png',
+                image: widget.playingSong.image,
+                fit: BoxFit.cover,
+                imageErrorBuilder: (context, error, stackTrace) {
+                  return Image.asset('assets/img.png', fit: BoxFit.cover);
+                },
+              ),
+            ),
+          ),
+
+          // GIAO DIỆN CHỒNG LÊN ẢNH
+          SafeArea(
+            child: Column(
+              children: [
+                // TỰ TẠO THANH NOW PLAYING
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: const Icon(
+                          CupertinoIcons.chevron_down,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const Spacer(),
+                      const Text(
+                        '   Now Playing',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const Spacer(),
                       IconButton(
                         onPressed: () {},
-                        icon: const Icon(Icons.share_outlined),
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      Column(
-                        children: [
-                          Text(
-                            widget.playingSong.title,
-                            style: Theme.of(context).textTheme.bodyMedium!
-                                .copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).textTheme.bodyMedium!.color,
-                                ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            widget.playingSong.artist,
-                            style: Theme.of(context).textTheme.bodyMedium!
-                                .copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).textTheme.bodyMedium!.color,
-                                ),
-                          ),
-                        ],
-                      ),
-                      IconButton(
-                        onPressed: () {},
-                        icon: const Icon(Icons.favorite_border_outlined),
-                        color: Theme.of(context).colorScheme.primary,
+                        icon: const Icon(Icons.more_horiz, color: Colors.white),
                       ),
                     ],
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: _progressBar(),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(
-                  top: 32,
-                  left: 24,
-                  right: 24,
-                  bottom: 16,
+
+                const SizedBox(height: 16),
+
+                Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          widget.playingSong.album,
+                          style: TextStyle(fontSize: 18, color: Colors.white),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text('__ ____ __'),
+                        const SizedBox(height: 48),
+                        RotationTransition(
+                          turns: Tween(
+                            begin: 0.0,
+                            end: 1.0,
+                          ).animate(_imageAnimController),
+                          child: FadeInImage.assetNetwork(
+                            placeholder: 'assets/img.png',
+                            image: widget.playingSong.image,
+                            width: screenWidth - delta,
+                            height: screenWidth - delta,
+                            imageErrorBuilder: (context, error, stackTrace) {
+                              return Image.asset(
+                                'assets/img.png',
+                                width: screenWidth - delta,
+                                height: screenWidth - delta,
+                              );
+                            },
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 16, bottom: 16),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              IconButton(
+                                onPressed: () {},
+                                icon: const Icon(
+                                  Icons.share,
+                                  color: Colors.white,
+                                ),
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              Column(
+                                children: [
+                                  Text(
+                                    widget.playingSong.title,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    widget.playingSong.artist,
+                                    style: TextStyle(
+                                      fontSize: 15,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              IconButton(
+                                onPressed: () {},
+                                icon: const Icon(
+                                  Icons.favorite_border_outlined,
+                                  color: Colors.white,
+                                ),
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 18),
+                          child: _progressBar(),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            top: 16,
+                            left: 24,
+                            right: 24,
+                            bottom: 40,
+                          ),
+                          child: _mediaButton(),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                child: _mediaButton(),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -169,26 +221,26 @@ class _NowPlayingPageState extends State<NowPlayingPage>
           MediaButtonControl(
             function: null,
             icon: Icons.shuffle,
-            color: Colors.black,
+            color: Colors.white,
             size: 24,
           ),
           MediaButtonControl(
             function: null,
             icon: Icons.skip_previous,
-            color: Colors.black,
+            color: Colors.white,
             size: 36,
           ),
           _playButton(),
           MediaButtonControl(
             function: null,
             icon: Icons.skip_next,
-            color: Colors.black,
+            color: Colors.white,
             size: 36,
           ),
           MediaButtonControl(
             function: null,
             icon: Icons.repeat,
-            color: Colors.black,
+            color: Colors.white,
             size: 24,
           ),
         ],
@@ -208,6 +260,11 @@ class _NowPlayingPageState extends State<NowPlayingPage>
           progress: progress,
           buffered: buffered,
           total: total,
+          baseBarColor: Colors.white.withOpacity(0.3),
+          bufferedBarColor: Colors.white54,
+          progressBarColor: Colors.white,
+          thumbColor: Colors.white,
+          timeLabelTextStyle: const TextStyle(color: Colors.white),
         );
       },
     );
@@ -220,6 +277,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
         final playState = snapshot.data;
         final processingState = playState?.processingState;
         final playing = playState?.playing;
+
         if (processingState == ProcessingState.loading ||
             processingState == ProcessingState.buffering) {
           return Container(
@@ -234,7 +292,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
               _audioPlayerManager.player.play();
             },
             icon: Icons.play_arrow,
-            color: null,
+            color: Colors.white,
             size: 48,
           );
         } else if (processingState != ProcessingState.completed) {
@@ -243,7 +301,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
               _audioPlayerManager.player.pause();
             },
             icon: Icons.pause,
-            color: null,
+            color: Colors.white,
             size: 48,
           );
         } else {
