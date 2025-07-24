@@ -39,21 +39,22 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     with SingleTickerProviderStateMixin {
   late AnimationController _imageAnimController;
   late AudioPlayerManager _audioPlayerManager;
+  late int _selectedItemIndex;
+  late Song _song;
 
   @override
   void initState() {
     super.initState();
+    _song = widget.playingSong;
     _imageAnimController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 12000),
     );
-    _audioPlayerManager = AudioPlayerManager(
-      songUrl: widget.playingSong.source,
-    );
+    _audioPlayerManager = AudioPlayerManager(songUrl: _song.source);
     _audioPlayerManager.init();
+    _selectedItemIndex = widget.songs.indexOf(widget.playingSong);
   }
 
-  @override
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -69,7 +70,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
               imageFilter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
               child: FadeInImage.assetNetwork(
                 placeholder: 'assets/img.png',
-                image: widget.playingSong.image,
+                image: _song.image,
                 fit: BoxFit.cover,
                 imageErrorBuilder: (context, error, stackTrace) {
                   return Image.asset('assets/img.png', fit: BoxFit.cover);
@@ -120,7 +121,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          widget.playingSong.album,
+                          _song.album,
                           style: TextStyle(fontSize: 18, color: Colors.white),
                         ),
                         const SizedBox(height: 16),
@@ -133,7 +134,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                           ).animate(_imageAnimController),
                           child: FadeInImage.assetNetwork(
                             placeholder: 'assets/img.png',
-                            image: widget.playingSong.image,
+                            image: _song.image,
                             width: screenWidth - delta,
                             height: screenWidth - delta,
                             imageErrorBuilder: (context, error, stackTrace) {
@@ -161,7 +162,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                               Column(
                                 children: [
                                   Text(
-                                    widget.playingSong.title,
+                                    _song.title,
                                     style: TextStyle(
                                       fontSize: 18,
                                       color: Colors.white,
@@ -169,7 +170,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    widget.playingSong.artist,
+                                    _song.artist,
                                     style: TextStyle(
                                       fontSize: 15,
                                       color: Colors.white,
@@ -194,10 +195,10 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                         ),
                         Padding(
                           padding: const EdgeInsets.only(
-                            top: 16,
+                            top: 32,
                             left: 24,
                             right: 24,
-                            bottom: 40,
+                            bottom: 32,
                           ),
                           child: _mediaButton(),
                         ),
@@ -213,6 +214,12 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     );
   }
 
+  @override
+  void dispose() {
+    _audioPlayerManager.dispose();
+    super.dispose();
+  }
+
   Widget _mediaButton() {
     return SizedBox(
       child: Row(
@@ -225,14 +232,14 @@ class _NowPlayingPageState extends State<NowPlayingPage>
             size: 24,
           ),
           MediaButtonControl(
-            function: null,
+            function: _setPrevSong,
             icon: Icons.skip_previous,
             color: Colors.white,
             size: 36,
           ),
           _playButton(),
           MediaButtonControl(
-            function: null,
+            function: _setNextSong,
             icon: Icons.skip_next,
             color: Colors.white,
             size: 36,
@@ -265,6 +272,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
           progressBarColor: Colors.white,
           thumbColor: Colors.white,
           timeLabelTextStyle: const TextStyle(color: Colors.white),
+          onSeek: _audioPlayerManager.player.seek,
         );
       },
     );
@@ -278,44 +286,77 @@ class _NowPlayingPageState extends State<NowPlayingPage>
         final processingState = playState?.processingState;
         final playing = playState?.playing;
 
+        const double buttonSize = 64;
         if (processingState == ProcessingState.loading ||
             processingState == ProcessingState.buffering) {
-          return Container(
-            margin: const EdgeInsets.all(8),
-            width: 8,
-            height: 8,
-            child: const CircularProgressIndicator(),
+          return SizedBox(
+            width: buttonSize,
+            height: buttonSize,
+            child: const CircularProgressIndicator(
+              color: Colors.white,
+              strokeWidth: 2,
+            ),
           );
         } else if (playing != true) {
-          return MediaButtonControl(
-            function: () {
-              _audioPlayerManager.player.play();
-            },
-            icon: Icons.play_arrow,
-            color: Colors.white,
-            size: 48,
+          return SizedBox(
+            width: buttonSize,
+            height: buttonSize,
+            child: MediaButtonControl(
+              function: () {
+                _audioPlayerManager.player.play();
+              },
+              icon: Icons.play_arrow,
+              color: Colors.white,
+              size: 48,
+            ),
           );
         } else if (processingState != ProcessingState.completed) {
-          return MediaButtonControl(
-            function: () {
-              _audioPlayerManager.player.pause();
-            },
-            icon: Icons.pause,
-            color: Colors.white,
-            size: 48,
+          return SizedBox(
+            width: buttonSize,
+            height: buttonSize,
+            child: MediaButtonControl(
+              function: () {
+                _audioPlayerManager.player.pause();
+              },
+              icon: Icons.pause,
+              color: Colors.white,
+              size: 48,
+            ),
           );
         } else {
-          return MediaButtonControl(
-            function: () {
-              _audioPlayerManager.player.seek(Duration.zero);
-            },
-            icon: Icons.replay,
-            color: null,
-            size: 48,
+          return SizedBox(
+            width: buttonSize,
+            height: buttonSize,
+            child: MediaButtonControl(
+              function: () {
+                _audioPlayerManager.player.seek(Duration.zero);
+              },
+              icon: Icons.replay,
+              color: Colors.white,
+              size: 48,
+            ),
           );
         }
       },
     );
+  }
+
+  void _setNextSong() {
+    ++_selectedItemIndex;
+    final nextSong = widget.songs[_selectedItemIndex];
+    _audioPlayerManager.updateSongUrl(nextSong.source);
+    setState(() {
+      _song = nextSong;
+    });
+  }
+
+  void _setPrevSong() {
+    --_selectedItemIndex;
+    final nextSong = widget.songs[_selectedItemIndex];
+    _audioPlayerManager.updateSongUrl(nextSong.source);
+    setState(() {
+      _song = nextSong;
+    });
   }
 }
 
