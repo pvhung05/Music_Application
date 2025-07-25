@@ -18,12 +18,12 @@ class AudioPlayerManager {
         total: playbackEvent.duration,
       ),
     );
-    player.setUrl(songUrl);
   }
 
-  void updateSongUrl(String Url) {
+  Future<void> updateSongUrl(String Url) async {
     songUrl = Url;
-    init();
+    await player.setUrl(songUrl);
+    await player.play();
   }
 
   void dispose() {

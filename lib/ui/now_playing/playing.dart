@@ -59,6 +59,11 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     _audioPlayerManager.init();
     _selectedItemIndex = widget.songs.indexOf(widget.playingSong);
     _loopMode = LoopMode.off;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _audioPlayerManager.player.setUrl(_song.source);
+      await _audioPlayerManager.player.play();
+    });
   }
 
   @override
