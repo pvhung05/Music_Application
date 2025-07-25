@@ -54,15 +54,13 @@ class _NowPlayingPageState extends State<NowPlayingPage>
       vsync: this,
       duration: const Duration(milliseconds: 12000),
     );
-    _audioPlayerManager = AudioPlayerManager(songUrl: _song.source);
-    _audioPlayerManager.init();
+    _audioPlayerManager = AudioPlayerManager();
+    _audioPlayerManager.prepare();  // setup stream
     _selectedItemIndex = widget.songs.indexOf(widget.playingSong);
     _loopMode = LoopMode.off;
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await _audioPlayerManager.player.setUrl(_song.source);
-      await _audioPlayerManager.player.play();
-    });
+    _audioPlayerManager.updateSongUrl(_song.source);
+
 
     _audioPlayerManager.player.playerStateStream.listen((playerState) {
       if (playerState.processingState == ProcessingState.completed) {
@@ -234,7 +232,6 @@ class _NowPlayingPageState extends State<NowPlayingPage>
 
   @override
   void dispose() {
-    _audioPlayerManager.dispose();
     super.dispose();
   }
 
