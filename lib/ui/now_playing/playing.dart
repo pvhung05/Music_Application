@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -41,6 +43,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
   late AudioPlayerManager _audioPlayerManager;
   late int _selectedItemIndex;
   late Song _song;
+  bool _isShuffed = false;
 
   @override
   void initState() {
@@ -226,9 +229,9 @@ class _NowPlayingPageState extends State<NowPlayingPage>
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           MediaButtonControl(
-            function: null,
+            function: _setShuffed,
             icon: Icons.shuffle,
-            color: Colors.white,
+            color: _getShuffedColor(),
             size: 24,
           ),
           MediaButtonControl(
@@ -342,7 +345,15 @@ class _NowPlayingPageState extends State<NowPlayingPage>
   }
 
   void _setNextSong() {
-    ++_selectedItemIndex;
+    if (_isShuffed) {
+      var random = Random();
+      _selectedItemIndex = random.nextInt(widget.songs.length - 1);
+    } else {
+      ++_selectedItemIndex;
+    }
+    if (_selectedItemIndex >= widget.songs.length) {
+      _selectedItemIndex = _selectedItemIndex % widget.songs.length;
+    }
     final nextSong = widget.songs[_selectedItemIndex];
     _audioPlayerManager.updateSongUrl(nextSong.source);
     setState(() {
@@ -351,12 +362,30 @@ class _NowPlayingPageState extends State<NowPlayingPage>
   }
 
   void _setPrevSong() {
-    --_selectedItemIndex;
+    if (_isShuffed) {
+      var random = Random();
+      _selectedItemIndex = random.nextInt(widget.songs.length - 1);
+    } else {
+      --_selectedItemIndex;
+    }
+    if (_selectedItemIndex < 0) {
+      _selectedItemIndex = (-1 * _selectedItemIndex) % widget.songs.length;
+    }
     final nextSong = widget.songs[_selectedItemIndex];
     _audioPlayerManager.updateSongUrl(nextSong.source);
     setState(() {
       _song = nextSong;
     });
+  }
+
+  void _setShuffed() {
+    setState(() {
+      _isShuffed = !_isShuffed;
+    });
+  }
+
+  Color? _getShuffedColor() {
+    return _isShuffed ? Colors.white38 : Colors.white;
   }
 }
 
