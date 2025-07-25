@@ -44,7 +44,6 @@ class _NowPlayingPageState extends State<NowPlayingPage>
   late int _selectedItemIndex;
   late Song _song;
   bool _isShuffed = false;
-  bool _replay = false;
   late LoopMode _loopMode;
 
   @override
@@ -63,6 +62,14 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _audioPlayerManager.player.setUrl(_song.source);
       await _audioPlayerManager.player.play();
+    });
+
+    _audioPlayerManager.player.playerStateStream.listen((playerState) {
+      if (playerState.processingState == ProcessingState.completed) {
+        if (_loopMode == LoopMode.off) {
+          _setNextSong();
+        }
+      }
     });
   }
 
