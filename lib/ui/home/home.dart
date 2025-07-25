@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:music/ui/discovery/discovery.dart';
+import 'package:music/ui/home/miniplayer.dart';
 import 'package:music/ui/home/viewmodel.dart';
 import 'package:music/ui/now_playing/audio_player_manager.dart';
 import 'package:music/ui/setting/settings.dart';
@@ -34,6 +35,9 @@ class MusicHomePage extends StatefulWidget {
 }
 
 class _State extends State<MusicHomePage> {
+  int _currentIndex = 0;
+  Song? currentPlayingSong;  // bài hát đang phát
+
   final List<Widget> _tabs = [
     const HomeTab(),
     const DiscoveryTab(),
@@ -41,52 +45,94 @@ class _State extends State<MusicHomePage> {
     const SettingsTab(),
   ];
 
+  void updateCurrentPlayingSong(Song song) {
+    setState(() {
+      currentPlayingSong = song;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(middle: Text('Music App')),
-      child: CupertinoTabScaffold(
-        tabBar: CupertinoTabBar(
-          backgroundColor: Theme.of(context).colorScheme.onInverseSurface,
-          activeColor: Colors.black,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Padding(
-                padding: EdgeInsets.only(top: 6), // Dịch xuống 4 pixel
-                child: Icon(Icons.home),
+      child: Stack(
+        children: [
+          Column(
+            children: [
+              Expanded(
+                child: CupertinoTabScaffold(
+                  tabBar: CupertinoTabBar(
+                    backgroundColor: Theme.of(context).colorScheme.onInverseSurface,
+                    activeColor: Colors.black,
+                    currentIndex: _currentIndex,
+                    onTap: (index) {
+                      setState(() {
+                        _currentIndex = index;
+                      });
+                    },
+                    items: const [
+                      BottomNavigationBarItem(
+                        icon: Padding(
+                          padding: EdgeInsets.only(top: 6),
+                          child: Icon(Icons.home),
+                        ),
+                        label: 'Home',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Padding(
+                          padding: EdgeInsets.only(top: 6),
+                          child: Icon(Icons.album),
+                        ),
+                        label: 'Discovery',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Padding(
+                          padding: EdgeInsets.only(top: 6),
+                          child: Icon(Icons.person),
+                        ),
+                        label: 'Account',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Padding(
+                          padding: EdgeInsets.only(top: 6),
+                          child: Icon(Icons.settings),
+                        ),
+                        label: 'Settings',
+                      ),
+                    ],
+                  ),
+                  tabBuilder: (BuildContext context, int index) {
+                    return _tabs[index];
+                  },
+                ),
               ),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Padding(
-                padding: EdgeInsets.only(top: 6),
-                child: Icon(Icons.album),
+            ],
+          ),
+          if (currentPlayingSong != null)
+            Positioned(
+              left: 2,
+              right: 2,
+              bottom: 76, // Chiều cao CupertinoTabBar để MiniPlayer nằm phía trên
+              child: MiniPlayer(
+                song: currentPlayingSong!,
+                onTap: () {
+                  Navigator.of(context).push(
+                    CupertinoPageRoute(
+                      builder: (context) => NowPlaying(
+                        songs: [], // truyền danh sách bài hát
+                        playingSong: currentPlayingSong!,
+                      ),
+                    ),
+                  );
+                },
               ),
-              label: 'Discovery',
             ),
-            BottomNavigationBarItem(
-              icon: Padding(
-                padding: EdgeInsets.only(top: 6),
-                child: Icon(Icons.person),
-              ),
-              label: 'Account',
-            ),
-            BottomNavigationBarItem(
-              icon: Padding(
-                padding: EdgeInsets.only(top: 6),
-                child: Icon(Icons.settings),
-              ),
-              label: 'Settings',
-            ),
-          ],
-        ),
-        tabBuilder: (BuildContext context, int index) {
-          return _tabs[index];
-        },
+        ],
       ),
     );
   }
 }
+
 
 class HomeTab extends StatelessWidget {
   const HomeTab({super.key});
@@ -210,6 +256,8 @@ class _HomeTabPageState extends State<HomeTabPage> {
   //   );
   // }
   void navigate(Song song) {
+    (context.findAncestorStateOfType<_State>())?.updateCurrentPlayingSong(song);
+
     Navigator.of(context).push(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
