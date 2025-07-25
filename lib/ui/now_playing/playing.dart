@@ -44,6 +44,8 @@ class _NowPlayingPageState extends State<NowPlayingPage>
   late int _selectedItemIndex;
   late Song _song;
   bool _isShuffed = false;
+  bool _replay = false;
+  late LoopMode _loopMode;
 
   @override
   void initState() {
@@ -56,6 +58,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     _audioPlayerManager = AudioPlayerManager(songUrl: _song.source);
     _audioPlayerManager.init();
     _selectedItemIndex = widget.songs.indexOf(widget.playingSong);
+    _loopMode = LoopMode.off;
   }
 
   @override
@@ -248,9 +251,9 @@ class _NowPlayingPageState extends State<NowPlayingPage>
             size: 36,
           ),
           MediaButtonControl(
-            function: null,
-            icon: Icons.repeat,
-            color: Colors.white,
+            function: _setRepeatOption,
+            icon: _repeatingIcon(),
+            color: _getRepeatingIconColor(),
             size: 24,
           ),
         ],
@@ -369,7 +372,8 @@ class _NowPlayingPageState extends State<NowPlayingPage>
       --_selectedItemIndex;
     }
     if (_selectedItemIndex < 0) {
-      _selectedItemIndex = (-1 * _selectedItemIndex) % widget.songs.length;
+      _selectedItemIndex =
+          (_selectedItemIndex + widget.songs.length) % widget.songs.length;
     }
     final nextSong = widget.songs[_selectedItemIndex];
     _audioPlayerManager.updateSongUrl(nextSong.source);
@@ -386,6 +390,28 @@ class _NowPlayingPageState extends State<NowPlayingPage>
 
   Color? _getShuffedColor() {
     return _isShuffed ? Colors.white38 : Colors.white;
+  }
+
+  IconData _repeatingIcon() {
+    return switch (_loopMode) {
+      LoopMode.one => Icons.repeat_one,
+      _ => Icons.repeat,
+    };
+  }
+
+  Color? _getRepeatingIconColor() {
+    return _loopMode == LoopMode.off ? Colors.white38 : Colors.white;
+  }
+
+  void _setRepeatOption() {
+    if (_loopMode == LoopMode.off) {
+      _loopMode = LoopMode.one;
+    } else {
+      _loopMode = LoopMode.off;
+    }
+    setState(() {
+      _audioPlayerManager.player.setLoopMode(_loopMode);
+    });
   }
 }
 
