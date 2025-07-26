@@ -1,62 +1,103 @@
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:music/data/model/song.dart';
 import 'package:music/ui/now_playing/audio_player_manager.dart';
-import 'package:music/ui/now_playing/playing.dart';
+import 'package:marquee/marquee.dart';
 
-class MiniPlayer extends StatelessWidget {
+class MiniPlayer extends StatefulWidget {
   final Song song;
   final VoidCallback onTap;
 
   const MiniPlayer({super.key, required this.song, required this.onTap});
 
   @override
+  State<MiniPlayer> createState() => _MiniPlayerState();
+}
+
+class _MiniPlayerState extends State<MiniPlayer> {
+  late AudioPlayerManager _audioPlayerManager;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioPlayerManager = AudioPlayerManager(); // Singleton Instance
+    _audioPlayerManager.prepare(); // Ensure stream is set up
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: widget.onTap,
       child: Container(
-        margin: const EdgeInsets.all(8), // Để tránh bị sát viền màn hình
+        margin: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.grey,
-          borderRadius: BorderRadius.circular(12), // Bo cong các góc MiniPlayer
+          color: Colors.grey[400],
+          borderRadius: BorderRadius.circular(12),
         ),
         height: 64,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Row(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(12), // Bo góc ảnh (nhỏ hơn 1 chút)
+              borderRadius: BorderRadius.circular(8),
               child: FadeInImage.assetNetwork(
                 placeholder: 'assets/img.png',
-                image: song.image,
+                image: widget.song.image,
                 width: 48,
                 height: 48,
                 fit: BoxFit.cover,
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                song.title + " " + song.artist,
-                style: const TextStyle(
-                  fontSize: 18,
-                  color: Colors.white,
-                  decoration: TextDecoration.none,
+              child: SizedBox(
+                height: 20,
+                child: Marquee(
+                  text: '${widget.song.title} - ${widget.song.artist}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.black,
+                    decoration: TextDecoration.none,
+                  ),
+                  scrollAxis: Axis.horizontal,
+                  blankSpace: 50.0,
+                  velocity: 30.0,
+                  pauseAfterRound: Duration(seconds: 1),
+                  startPadding: 10.0,
+                  accelerationDuration: Duration(seconds: 1),
+                  accelerationCurve: Curves.linear,
+                  decelerationDuration: Duration(milliseconds: 500),
+                  decelerationCurve: Curves.easeOut,
                 ),
-                overflow: TextOverflow.ellipsis,
               ),
             ),
-            SizedBox(
-              child: MediaButtonControl(
-                function: null,
-                icon: Icons.pause,
-                color: null,
-                size: 24,
-              ),
-            )
+            const SizedBox(width: 12),
+            StreamBuilder<PlayerState>(
+              stream: _audioPlayerManager.player.playerStateStream,
+              builder: (context, snapshot) {
+                final playerState = snapshot.data;
+                final playing = playerState?.playing ?? false;
+
+                return IconButton(
+                  onPressed: () {
+                    if (playing) {
+                      _audioPlayerManager.player.pause();
+                    } else {
+                      _audioPlayerManager.player.play();
+                    }
+                  },
+                  icon: Icon(
+                    playing ? Icons.pause : Icons.play_arrow,
+                    color: Colors.white,
+                  ),
+                  iconSize: 28,
+                );
+              },
+            ),
           ],
         ),
       ),
     );
-
   }
 }
+

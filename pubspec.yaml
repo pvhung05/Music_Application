@@ -38,6 +38,7 @@ dependencies:
   just_audio: ^0.10.4
   rxdart: ^0.28.0
   audio_video_progress_bar: ^2.0.3
+  marquee: ^2.2.3
 
 dev_dependencies:
   flutter_test:

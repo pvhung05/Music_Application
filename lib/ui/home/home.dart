@@ -36,7 +36,8 @@ class MusicHomePage extends StatefulWidget {
 
 class _State extends State<MusicHomePage> {
   int _currentIndex = 0;
-  Song? currentPlayingSong;  // bài hát đang phát
+  Song? currentPlayingSong; // bài hát đang phát
+  List<Song> allSongs = [];
 
   final List<Widget> _tabs = [
     const HomeTab(),
@@ -62,7 +63,9 @@ class _State extends State<MusicHomePage> {
               Expanded(
                 child: CupertinoTabScaffold(
                   tabBar: CupertinoTabBar(
-                    backgroundColor: Theme.of(context).colorScheme.onInverseSurface,
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.onInverseSurface,
                     activeColor: Colors.black,
                     currentIndex: _currentIndex,
                     onTap: (index) {
@@ -112,15 +115,21 @@ class _State extends State<MusicHomePage> {
             Positioned(
               left: 2,
               right: 2,
-              bottom: 76, // Chiều cao CupertinoTabBar để MiniPlayer nằm phía trên
+              bottom: 76,
+              // Chiều cao CupertinoTabBar để MiniPlayer nằm phía trên
               child: MiniPlayer(
                 song: currentPlayingSong!,
                 onTap: () {
                   Navigator.of(context).push(
                     CupertinoPageRoute(
                       builder: (context) => NowPlaying(
-                        songs: [], // truyền danh sách bài hát
+                        songs: allSongs, // truyền danh sách bài hát
                         playingSong: currentPlayingSong!,
+                        onSongChanged: (newSong) {
+                          setState(() {
+                            currentPlayingSong = newSong;  // cập nhật bài hát ở MiniPlayer
+                          });
+                        },
                       ),
                     ),
                   );
@@ -132,7 +141,6 @@ class _State extends State<MusicHomePage> {
     );
   }
 }
-
 
 class HomeTab extends StatelessWidget {
   const HomeTab({super.key});
@@ -214,6 +222,9 @@ class _HomeTabPageState extends State<HomeTabPage> {
       setState(() {
         songs.addAll(songList);
       });
+
+      (context.findAncestorStateOfType<_State>())?.allSongs = songs;
+
     });
   }
 
@@ -259,27 +270,11 @@ class _HomeTabPageState extends State<HomeTabPage> {
     (context.findAncestorStateOfType<_State>())?.updateCurrentPlayingSong(song);
 
     Navigator.of(context).push(
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            NowPlaying(songs: songs, playingSong: song),
-        transitionDuration: const Duration(milliseconds: 400),
-        reverseTransitionDuration: const Duration(milliseconds: 400),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          final curvedAnimation =
-          CurvedAnimation(parent: animation, curve: Curves.easeOut);
-
-          return SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 1), // từ dưới lên
-              end: Offset.zero,
-            ).animate(curvedAnimation),
-            child: child,
-          );
-        },
+      CupertinoPageRoute(
+        builder: (context) => NowPlaying(songs: songs, playingSong: song, onSongChanged: (newSong) {  },),
       ),
     );
   }
-
 }
 
 class _SongItemSection extends StatelessWidget {

@@ -12,14 +12,24 @@ import 'audio_player_manager.dart' show DurationState;
 import 'dart:ui';
 
 class NowPlaying extends StatelessWidget {
-  const NowPlaying({super.key, required this.playingSong, required this.songs});
-
   final Song playingSong;
   final List<Song> songs;
+  final ValueChanged<Song> onSongChanged;
+
+  const NowPlaying({
+    super.key,
+    required this.playingSong,
+    required this.songs,
+    required this.onSongChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return NowPlayingPage(songs: songs, playingSong: playingSong);
+    return NowPlayingPage(
+      songs: songs,
+      playingSong: playingSong,
+      onSongChanged: onSongChanged, // <--- truyền xuống
+    );
   }
 }
 
@@ -27,11 +37,12 @@ class NowPlayingPage extends StatefulWidget {
   const NowPlayingPage({
     super.key,
     required this.songs,
-    required this.playingSong,
+    required this.playingSong, required this.onSongChanged,
   });
 
   final Song playingSong;
   final List<Song> songs;
+  final ValueChanged<Song> onSongChanged;
 
   @override
   State<NowPlayingPage> createState() => _NowPlayingPageState();
@@ -107,7 +118,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
                         child: const Icon(
-                          CupertinoIcons.chevron_down,
+                          CupertinoIcons.back,
                           color: Colors.white,
                         ),
                       ),
@@ -368,6 +379,9 @@ class _NowPlayingPageState extends State<NowPlayingPage>
     }
     final nextSong = widget.songs[_selectedItemIndex];
     _audioPlayerManager.updateSongUrl(nextSong.source);
+
+    widget.onSongChanged(nextSong);
+
     setState(() {
       _song = nextSong;
     });
@@ -384,10 +398,13 @@ class _NowPlayingPageState extends State<NowPlayingPage>
       _selectedItemIndex =
           (_selectedItemIndex + widget.songs.length) % widget.songs.length;
     }
-    final nextSong = widget.songs[_selectedItemIndex];
-    _audioPlayerManager.updateSongUrl(nextSong.source);
+    final prevSong = widget.songs[_selectedItemIndex];
+    _audioPlayerManager.updateSongUrl(prevSong.source);
+
+    widget.onSongChanged(prevSong);
+
     setState(() {
-      _song = nextSong;
+      _song = prevSong;
     });
   }
 
