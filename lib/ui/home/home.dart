@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:music/ui/discovery/discovery.dart';
+import 'package:music/ui/discovery/finding.dart';
 import 'package:music/ui/home/miniplayer.dart';
 import 'package:music/ui/home/viewmodel.dart';
 import 'package:music/ui/now_playing/audio_player_manager.dart';
@@ -53,7 +54,30 @@ class _State extends State<MusicHomePage> {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(middle: Text('Music App')),
+      navigationBar: CupertinoNavigationBar(
+        middle: Text('Music App'),
+        trailing: _currentIndex == 0
+            ? GestureDetector(
+          onTap: () async {
+            final selectedSong = await Navigator.push<Song>(
+              context,
+              MaterialPageRoute(
+                builder: (context) => FindingTab(songs: allSongs),
+              ),
+            );
+
+            if (selectedSong != null) {
+              setState(() {
+                currentPlayingSong = selectedSong;
+              });
+            }
+          },
+          child: Icon(Icons.search, color: Colors.black),
+        )
+            : null,  // Các tab khác sẽ không có icon
+      ),
+
+
       child: Stack(
         children: [
           Column(

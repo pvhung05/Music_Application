@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:music/data/model/song.dart';
+import 'package:music/ui/discovery/finding.dart';
 import 'package:music/ui/now_playing/audio_player_manager.dart';
 
 import 'audio_player_manager.dart' show DurationState;
@@ -124,7 +125,7 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                       ),
                       const Spacer(),
                       const Text(
-                        '   Now Playing',
+                        'Now Playing',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w500,
@@ -133,13 +134,28 @@ class _NowPlayingPageState extends State<NowPlayingPage>
                       ),
                       const Spacer(),
                       IconButton(
-                        onPressed: () {},
-                        icon: const Icon(Icons.more_horiz, color: Colors.white),
+                        onPressed: () async {
+                          final selectedSong = await Navigator.push<Song>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FindingTab(songs: widget.songs),
+                            ),
+                          );
+
+                          if (selectedSong != null) {
+                            _audioPlayerManager.updateSongUrl(selectedSong.source);
+                            widget.onSongChanged(selectedSong);
+                            setState(() {
+                              _song = selectedSong;
+                              _selectedItemIndex = widget.songs.indexOf(selectedSong);
+                            });
+                          }
+                        },
+                        icon: const Icon(Icons.search, color: Colors.white),
                       ),
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 16),
 
                 Expanded(
