@@ -5,7 +5,6 @@ import 'package:music/ui/home/miniplayer.dart';
 import 'package:music/ui/home/viewmodel.dart';
 import 'package:music/ui/now_playing/audio_player_manager.dart';
 import 'package:music/ui/setting/settings.dart';
-import 'package:music/ui/user/users.dart';
 
 import '../../data/model/song.dart';
 import '../now_playing/playing.dart';
@@ -42,7 +41,6 @@ class _State extends State<MusicHomePage> {
   final List<Widget> _tabs = [
     const HomeTab(),
     const DiscoveryTab(),
-    const AccountTab(),
     const SettingsTab(),
   ];
 
@@ -91,13 +89,6 @@ class _State extends State<MusicHomePage> {
                       BottomNavigationBarItem(
                         icon: Padding(
                           padding: EdgeInsets.only(top: 6),
-                          child: Icon(Icons.person),
-                        ),
-                        label: 'Account',
-                      ),
-                      BottomNavigationBarItem(
-                        icon: Padding(
-                          padding: EdgeInsets.only(top: 6),
                           child: Icon(Icons.settings),
                         ),
                         label: 'Settings',
@@ -127,7 +118,8 @@ class _State extends State<MusicHomePage> {
                         playingSong: currentPlayingSong!,
                         onSongChanged: (newSong) {
                           setState(() {
-                            currentPlayingSong = newSong;  // cập nhật bài hát ở MiniPlayer
+                            currentPlayingSong =
+                                newSong; // cập nhật bài hát ở MiniPlayer
                           });
                         },
                       ),
@@ -224,7 +216,6 @@ class _HomeTabPageState extends State<HomeTabPage> {
       });
 
       (context.findAncestorStateOfType<_State>())?.allSongs = songs;
-
     });
   }
 
@@ -271,7 +262,11 @@ class _HomeTabPageState extends State<HomeTabPage> {
 
     Navigator.of(context).push(
       CupertinoPageRoute(
-        builder: (context) => NowPlaying(songs: songs, playingSong: song, onSongChanged: (newSong) {  },),
+        builder: (context) => NowPlaying(
+          songs: songs,
+          playingSong: song,
+          onSongChanged: (newSong) {},
+        ),
       ),
     );
   }
